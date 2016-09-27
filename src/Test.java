@@ -1,10 +1,7 @@
 import com.squareup.okhttp.*;
-import org.json.JSONObject;
 
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.URLDecoder;
+import java.net.*;
+import java.util.List;
 
 
 /**
@@ -23,89 +20,88 @@ public class Test {
         cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
         client.setCookieHandler(cookieManager);
 
-        String model = "MN8K2ZP";
-        String store = "499";
-        String url = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?partNumber=" + model + "%2FA&channel=1&rv=&path=&sourceID=&iPP=false&appleCare=&iUID=&iuToken=&carrier=&store=R" + store;
-        //String url = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?partNumber=MN8K2ZP%2FA&channel=1&rv=&path=&sourceID=&iPP=false&appleCare=&iUID=&iuToken=&carrier=&store=R499";
-        //String url2 = "https://signin.apple.com/IDMSWebAuth/signin?path=%2FHK%2Fzh_HK%2Freserve%2FiPhone%3Fexecution%3De1s1%26p_left%3DAAAAAASLIrddmxUwDKg1plQYomMpgo0JaZW3EBjYF%252B3KgzXKbQ%253D%253D%26_eventId%3Dnext&p_time=1474626323&rv=3&language=HK-ZH&p_left=AAAAAASLIrddmxUwDKg1plQYomMpgo0JaZW3EBjYF%2B3KgzXKbQ%3D%3D&appIdKey=db0114b11bdc2a139e5adff448a1d7325febef288258f0dc131d6ee9afe63df3";
-
-        String result = null;
-        Request request = new Request.Builder().url(url).build();
+        Request request = null;
         Response response = null;
-
-        try {
-            response = client.newCall(request).execute();
-            result = response.request().url().toString();
-            System.out.println(result);
-            System.out.println(response.networkResponse().toString());
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        String path = result.substring(result.indexOf("signin?path=")+12,result.indexOf("&p_time="));
-        String appIdKey = result.substring(result.indexOf("&appIdKey=")+10);
-
-        System.out.println(result);
-        System.out.println(path);
-        System.out.println(URLDecoder.decode(path));
-        System.out.println(appIdKey);
-
-
+        String url = null;
+        String result = null;
+        String path = null;
+        String appIdKey = null;
+        String referer = null;
 
         try {
 
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-/*
-            JSONObject json = new JSONObject();
-            json.put("accountName","today20150919@gmail.com");
-            json.put("password","Fuck93");
-            json.put("rememberMe",false);
 
-            RequestBody body = RequestBody.create(JSON,json.toString());
-*/
             String jsonString = "{\"accountName\":\"today20150919@gmail.com\",\"password\":\"Fuck9394\",\"rememberMe\":false}";
             RequestBody body = RequestBody.create(JSON,jsonString);
+            url = "https://signin.apple.com/appleauth/auth/signin?widgetKey=40692a3a849499c31657eac1ec8123aa&language=HK-ZH";
 
             request = new Request.Builder()
-                    //.url("https://signin.apple.com/appleauth/auth/signin")
-                    .url("https://signin.apple.com/appleauth/auth/signin?widgetKey=40692a3a849499c31657eac1ec8123aa&language=HK-ZH")
+                    .url(url)
                     .post(body)
                     .header("Accept","application/json, text/javascript, */*; q=0.01")
+                    .header("Accept-Language","en-US,en;q=0.5")
+                    .header("Accept-Encoding","gzip, deflate, br")
+                    .header("Content-Type","application/json")
                     .header("X-Apple-Widget-Key","40692a3a849499c31657eac1ec8123aa")
                     .header("X-Apple-Locale","HK-ZH")
                     .build();
             response = client.newCall(request).execute();
-            System.out.println(response.code());
-            System.out.println(response.request().url().toString());
-            System.out.println(response.networkResponse().toString());
 
+            System.out.printf("Step1: %s\n",url);
+            System.out.printf("%s\n\n",response.networkResponse().toString());
         }
         catch (Exception e) {
             e.printStackTrace();
         }
 
+        try {
+
+            String model = "MN8K2ZP";
+            String store = "673";
+            url = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?partNumber=" + model + "%2FA&channel=1&rv=&path=&sourceID=&iPP=false&appleCare=&iUID=&iuToken=&carrier=&store=R" + store;
+
+            request = new Request.Builder()
+                    .url(url)
+                    .header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language","zh-HK,en-US;q=0.7,en;q=0.3")
+                    .header("Accept-Encoding","gzip, deflate, br")
+                    .header("Connection","keep-alive")
+                    .header("Upgrade-Insecure-Requests","1")
+                    .build();
+
+            response = client.newCall(request).execute();
+            result = response.request().url().toString();
+            referer = result;
+
+            System.out.printf("%s: %s\n","Step2",url);
+            path = result.substring(result.indexOf("signin?path=")+12,result.indexOf("&p_time="));
+            appIdKey = result.substring(result.indexOf("&appIdKey=")+10);
+
+            System.out.printf("path  : %s\n",path);
+            System.out.printf("decode: %s\n",URLDecoder.decode(path));
+            System.out.printf("appIdKey: %s\n",appIdKey);
+            System.out.printf("%s\n\n",response.networkResponse().toString());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
 
         try {
-            path = path.replace("e1s1","e2s1");
             FormEncodingBuilder builder = new FormEncodingBuilder();
             builder.add("rememberMe", "false");
             builder.add("oAuthToken", "");
             builder.add("appIdKey", appIdKey);
             builder.add("language", "HK-ZH");
             builder.add("path", URLDecoder.decode(path));
-            //builder.add("path",path);
             builder.add("rv", "3");
 
-            //https://signin.apple.com/IDMSWebAuth/signin?path=%2FHK%2Fzh_HK%2Freserve%2FiPhone%3Fexecution%3De1s1%26p_left%3DAAAAAAS%252FYRBVeUW9NDfT%252FjCODh62gtRBmWOuqDsl93u0WWBsXw%253D%253D%26_eventId%3Dnext&p_time=1474785866&rv=3&language=HK-ZH&p_left=AAAAAAS%2FYRBVeUW9NDfT%2FjCODh62gtRBmWOuqDsl93u0WWBsXw%3D%3D&appIdKey=db0114b11bdc2a139e5adff448a1d7325febef288258f0dc131d6ee9afe63df3
-            //https://signin.apple.com/IDMSWebAuth/signin?path=%2FHK%2Fzh_HK%2Freserve%2FiPhone%3Fexecution%3De1s2%26p_left%3DAAAAAATPKcW5m00W7gd8QIipT46PMDFtG7psz2hUx%252F5uO5XhBw%253D%253D%26_eventId%3Dnext&p_time=1474785870&rv=3&language=HK-ZH&p_left=AAAAAATPKcW5m00W7gd8QIipT46PMDFtG7psz2hUx%2F5uO5XhBw%3D%3D&appIdKey=db0114b11bdc2a139e5adff448a1d7325febef288258f0dc131d6ee9afe63df3
-            //https://signin.apple.com/IDMSWebAuth/signin?path=%2FHK%2Fzh_HK%2Freserve%2FiPhone%3Fexecution%3De1s2%26p_left%3DAAAAAASbe0FbS%252BB8WoFEuSSyb7btDG8OFirbZC%252BybGYBde8VFg%253D%253D%26_eventId%3Dnext&p_time=1474786093&rv=3&language=HK-ZH&p_left=AAAAAASbe0FbS%2BB8WoFEuSSyb7btDG8OFirbZC%2BybGYBde8VFg%3D%3D&appIdKey=db0114b11bdc2a139e5adff448a1d7325febef288258f0dc131d6ee9afe63df3
-            //https://signin.apple.com/IDMSWebAuth/signin?path=%2FHK%2Fzh_HK%2Freserve%2FiPhone%3Fexecution%3De1s2%26p_left%3DAAAAAASXztkK8tGlH7VhLoDcFfKU%252FZy%252B2q1Bf1hMn61lRcvmnw%253D%253D%26_eventId%3Dnext&p_time=1474786410&rv=3&language=HK-ZH&p_left=AAAAAASXztkK8tGlH7VhLoDcFfKU%2FZy%2B2q1Bf1hMn61lRcvmnw%3D%3D&appIdKey=db0114b11bdc2a139e5adff448a1d7325febef288258f0dc131d6ee9afe63df3
-            //https://signin.apple.com/IDMSWebAuth/signin?path=%2FHK%2Fzh_HK%2Freserve%2FiPhone%3Fexecution%3De1s2%26p_left%3DAAAAAARJqd%252BcEgVwmhR5z5ZlMl9suskEKUqc13Fidvpcs6uFTg%253D%253D%26_eventId%3Dnext&p_time=1474786608&rv=3&language=HK-ZH&p_left=AAAAAARJqd%2BcEgVwmhR5z5ZlMl9suskEKUqc13Fidvpcs6uFTg%3D%3D&appIdKey=db0114b11bdc2a139e5adff448a1d7325febef288258f0dc131d6ee9afe63df3
+            url = "https://signin.apple.com/IDMSWebAuth/signin";
 
             request = new Request.Builder()
-                    .url("https://signin.apple.com/IDMSWebAuth/signin")
+                    .url(url)
                     .post(builder.build())
+                    .header("Referer",referer)
                     .header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     .header("Accept-Language","zh-HK,en-US;q=0.7,en;q=0.3")
                     .header("Accept-Encoding","gzip, deflate, br")
@@ -115,34 +111,43 @@ public class Test {
                     .build();
 
             response = client.newCall(request).execute();
-            System.out.println(response.code());
-            System.out.println(response.request().url().toString());
-            System.out.println(response.networkResponse().toString());
-            System.out.println(response.isRedirect());
+
+            System.out.printf("Step3: %s\n",url);
+            Response prior3 = response.priorResponse();
+            Response prior2 = prior3.priorResponse();
+            Response prior1 = prior2.priorResponse();
+            System.out.printf("prior1: %s\n",prior1.toString());
+            System.out.printf("prior2: %s\n",prior2.toString());
+            System.out.printf("prior3: %s\n",prior3.toString());
+            System.out.printf("%s\n\n",response.networkResponse().toString());
+            List<HttpCookie> cookies = cookieManager.getCookieStore().getCookies();
+            System.out.println(cookies);
+
         }
         catch (Exception e) {
             e.printStackTrace();
         }
 
-        String e2s2 = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?execution=e2s2&ajaxSource=true&_eventId=context";
-        //String e2s2 = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?execution=e2s2";
-        request = new Request.Builder().url(e2s2).build();
+        url = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?execution=e1s2&ajaxSource=true&_eventId=context";
+        request = new Request.Builder().url(url)
+                .header("Accept","application/json, text/javascript, */*; q=0.01")
+                .header("Accept-Language","en-US,en;q=0.5")
+                //.header("Accept-Encoding","gzip, deflate, br")
+                .header("X-Requested-With","XMLHttpRequest")
+                .header("Connection","keep-alive")
+                .header("Referer","https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?execution=e1s2")
+                .build();
 
         try {
             response = client.newCall(request).execute();
-            result = response.request().url().toString();
-            System.out.println("haha");
-            System.out.println(response.body().string());
-            System.out.println("haha2");
+
+            System.out.printf("Step4: %s\n",url);
+            System.out.printf("%s\n",response.networkResponse().toString());
+
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-
-        System.out.println(response.code());
-        System.out.println(result);
-        System.out.println(response.networkResponse().toString());
-
 
     }
 }
