@@ -1,7 +1,6 @@
 import com.squareup.okhttp.*;
 
 import java.net.*;
-import java.util.List;
 
 
 /**
@@ -30,6 +29,41 @@ public class Test {
 
         try {
 
+            //https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?partNumber=MN4L2ZP%2FA&channel=&rv=&path=&sourceID=&iPP=false&appleCare=&iUID=&iuToken=&carrier=&store=R428%C2%A0
+
+            //String model = "MN8K2ZP";
+            String model = "MN4L2ZP";
+            String store = "673";
+            url = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?partNumber=" + model + "%2FA&channel=1&rv=&path=&sourceID=&iPP=false&appleCare=&iUID=&iuToken=&carrier=&store=R" + store;
+
+            request = new Request.Builder()
+                    .url(url)
+                    .header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language","zh-HK,en-US;q=0.7,en;q=0.3")
+                    .header("Accept-Encoding","gzip, deflate, br")
+                    .header("Connection","keep-alive")
+                    .header("Upgrade-Insecure-Requests","1")
+                    .build();
+
+            response = client.newCall(request).execute();
+            result = response.request().url().toString();
+            referer = result;
+
+            System.out.printf("%s: %s\n","Step1",url);
+            path = result.substring(result.indexOf("signin?path=")+12,result.indexOf("&p_time="));
+            appIdKey = result.substring(result.indexOf("&appIdKey=")+10);
+
+            System.out.printf("path  : %s\n",path);
+            System.out.printf("decode: %s\n",URLDecoder.decode(path));
+            System.out.printf("appIdKey: %s\n",appIdKey);
+            System.out.printf("%s\n\n",response.networkResponse().toString());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
             String jsonString = "{\"accountName\":\"today20150919@gmail.com\",\"password\":\"Fuck9394\",\"rememberMe\":false}";
@@ -48,40 +82,9 @@ public class Test {
                     .build();
             response = client.newCall(request).execute();
 
-            System.out.printf("Step1: %s\n",url);
+            System.out.printf("Step2: %s\n",url);
             System.out.printf("%s\n\n",response.networkResponse().toString());
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-
-            String model = "MN8K2ZP";
-            String store = "673";
-            url = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?partNumber=" + model + "%2FA&channel=1&rv=&path=&sourceID=&iPP=false&appleCare=&iUID=&iuToken=&carrier=&store=R" + store;
-
-            request = new Request.Builder()
-                    .url(url)
-                    .header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                    .header("Accept-Language","zh-HK,en-US;q=0.7,en;q=0.3")
-                    .header("Accept-Encoding","gzip, deflate, br")
-                    .header("Connection","keep-alive")
-                    .header("Upgrade-Insecure-Requests","1")
-                    .build();
-
-            response = client.newCall(request).execute();
-            result = response.request().url().toString();
-            referer = result;
-
-            System.out.printf("%s: %s\n","Step2",url);
-            path = result.substring(result.indexOf("signin?path=")+12,result.indexOf("&p_time="));
-            appIdKey = result.substring(result.indexOf("&appIdKey=")+10);
-
-            System.out.printf("path  : %s\n",path);
-            System.out.printf("decode: %s\n",URLDecoder.decode(path));
-            System.out.printf("appIdKey: %s\n",appIdKey);
-            System.out.printf("%s\n\n",response.networkResponse().toString());
+            System.out.println(cookieManager.getCookieStore().getCookies());
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -120,29 +123,30 @@ public class Test {
             System.out.printf("prior2: %s\n",prior2.toString());
             System.out.printf("prior3: %s\n",prior3.toString());
             System.out.printf("%s\n\n",response.networkResponse().toString());
-            List<HttpCookie> cookies = cookieManager.getCookieStore().getCookies();
-            System.out.println(cookies);
 
         }
         catch (Exception e) {
             e.printStackTrace();
         }
 
-        url = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?execution=e1s2&ajaxSource=true&_eventId=context";
-        request = new Request.Builder().url(url)
-                .header("Accept","application/json, text/javascript, */*; q=0.01")
-                .header("Accept-Language","en-US,en;q=0.5")
-                //.header("Accept-Encoding","gzip, deflate, br")
-                .header("X-Requested-With","XMLHttpRequest")
-                .header("Connection","keep-alive")
-                .header("Referer","https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?execution=e1s2")
-                .build();
-
         try {
+            url = "https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?execution=e1s2&ajaxSource=true&_eventId=context";
+            request = new Request.Builder().url(url)
+                    .header("Accept","application/json, text/javascript, */*; q=0.01")
+                    .header("Accept-Language","en-US,en;q=0.5")
+                    //
+                    .header("Accept-Encoding","gzip, deflate, br")
+                    //
+                    .header("X-Requested-With","XMLHttpRequest")
+                    .header("Connection","keep-alive")
+                    .header("Referer","https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?execution=e1s2")
+                    .build();
+
             response = client.newCall(request).execute();
 
             System.out.printf("Step4: %s\n",url);
             System.out.printf("%s\n",response.networkResponse().toString());
+            //System.out.println(response.body().string());
 
         }
         catch (Exception e) {
